@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { mockConversations, mockUser } from "../mockData"
 
-import type { Conversation } from "../types";
+import type { Conversation } from "../types/types";
+import ConversationItem from "./ConversationItem";
+import { Link } from "react-router-dom";
 
 
 const ConversationsList = () => {
@@ -10,24 +12,20 @@ const ConversationsList = () => {
 
   return (
     <div className="center">
-      <div style={{marginBottom: "10px"}}>
-        <b>Conversations</b>
-      </div>
-      <div style={{marginBottom: "10px"}}>
+      <div className="my-10">
         <b>
-            Current user: {mockUser.username}
+            Current user: {mockUser.username.toUpperCase()}
         </b>
       </div>
-      <ul>
+      <ul className="justify-center">
         {
         conversations.map((conversation) => (
-            <li key={conversation.conversation_id}>
-            <a href="">
-                <div>
-                    <p>{conversation.conversation_id}</p>
-                </div>
-            </a>
-        </li>
+        <Link to="/chat/conversation_id" 
+        state={{mockUser}}>
+          <li key={conversation.conversation_id}>
+              <ConversationItem name="here" conversation_id={conversation.conversation_id} />
+          </li>
+        </Link>
         ))
       }
       </ul>

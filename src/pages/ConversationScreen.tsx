@@ -1,20 +1,25 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { Message } from '../types';
-import { ConversationMessage } from './ConversationMessage';
+import type { Message } from '../types/types';
+import { ConversationMessage } from '../components/ConversationMessage';
 import { mockMessages } from '../mockData';
-
-interface ConversationScreenProps {
-  currentConversationId: string;
-  currentUserId: number;
-}
+import { useLocation, useParams } from 'react-router-dom';
+import NavBar from '../components/Navbar';
+import MessageInput from '../components/MessageInput';
 
 
 
 
-const ConversationScreen: React.FC<ConversationScreenProps> = ({ currentConversationId, currentUserId }) => {
+const ConversationScreen: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { conversationId } = useParams();
+  console.log(useLocation().state.mockUser);
+  const currentUserId: number = 1;
 
   const [messages, setMessages] = useState<Message[]>(mockMessages);
+
+  const handleSend = () => {
+
+  }
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -31,15 +36,17 @@ const ConversationScreen: React.FC<ConversationScreenProps> = ({ currentConversa
     };
 
     fetchMessages();
-  }, [currentConversationId]);
+  }, [conversationId]);
 
 
   return (
     <div>
+      <NavBar title={useLocation().state.mockUser.username.toString()} />
       {messages.map((message) => (
         <ConversationMessage key={message.message_id} textmessage={message} isCurrentUser={message.sender_id === currentUserId} />
       ))}
       <div ref={messagesEndRef} />
+      <MessageInput />
     </div>
   );
 };

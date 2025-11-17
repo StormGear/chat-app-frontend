@@ -1,4 +1,4 @@
-import type { Message } from "../types";
+import type { Message } from "../types/types";
 import React  from "react";
 
 
@@ -9,9 +9,8 @@ interface ConversationMessageProps {
 
 export const ConversationMessage: React.FC<ConversationMessageProps> = ({textmessage, isCurrentUser}) => {
     return (
-    <div style={{ textAlign: isCurrentUser ? 'right' : 'left', margin: '5px 0' }}>
-      <div
-      >
+    <div style={{ textAlign: isCurrentUser ? 'right' : 'left' }} className={`my-5 mx-5`}>
+      <div className="flex flex-col">
         {!isCurrentUser && <b>{textmessage.sender_id}</b>}
         {textmessage.textmessage}
         <span>
