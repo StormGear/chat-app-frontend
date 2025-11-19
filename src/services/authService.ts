@@ -1,8 +1,12 @@
 
-export const register = async (username: string) => {
+export const register = async (username: string, password: string) => {
     try {
-        const response = await fetch(`http://localhost:8080/user/register?username=${username}`, {
-            method: 'POST'
+        const response = await fetch(`http://localhost:8080/user/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
             }
         );
 
@@ -13,21 +17,29 @@ export const register = async (username: string) => {
 
         const data = await response.json();
         console.log('Registration successful: ', data);
-        return data;
+        return data.success;
     } catch (error) {
         console.error("Error during registration", error);
     }
 }
 
-export const login = async (username: string) => {
+export const login = async (username: string, password: string) => {
     try {
-        const response = await fetch(`http://localhost:8080/user/login?username=${username}`);
-
+        const response = await fetch(`http://localhost:8080/user/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        }
+        );
         if (!(response.ok)) {
             const errorInfo = await response.json();
             throw new Error(errorInfo || "Login failed");
         }
-
+        const data = await response.json();
+        console.log('Login successful: ', data);
+        return data.success;
     } catch (error) {
         console.error("Error during login", error);
     }

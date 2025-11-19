@@ -1,0 +1,36 @@
+import React, { createContext, useContext, useState } from 'react';
+import type { AuthContextType, User } from '../types/types';
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User>(() => {
+    const saved = localStorage.getItem('authUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const login = (id: number, username: string) => {
+    const newUser = { id, username };
+    setUser(newUser);
+    localStorage.setItem('authUser', JSON.stringify(newUser));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('authUser');
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('no AuthProvider');
+  }
+  return context;
+};

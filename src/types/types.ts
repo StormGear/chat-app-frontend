@@ -1,8 +1,8 @@
 
-export interface User {
+export type User = {
     id: number;
     username: string;
-}
+} | null;
 
 export interface Message {
     message_id: number;
@@ -15,3 +15,11 @@ export interface Message {
 export interface Conversation {
     conversation_id: number;
 }
+
+
+
+export type AuthContextType = {
+  user: User;
+  login: (id: number, username: string) => void;
+  logout: () => void;
+};
