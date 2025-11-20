@@ -1,18 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Message } from '../types/types';
 import { ConversationMessage } from '../components/ConversationMessage';
-import { mockMessages } from '../mockData';
 import MessageInput from '../components/MessageInput';
 import type { ChatData } from './Home';
+import { useAuth } from '../contexts/AuthContext';
 
 
 
 
 const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selectedChat}) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
 
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages, setMessages] = useState<Message[]>();
 
 
    useEffect(() => {
@@ -37,31 +38,21 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
 
         const response = await fetch(url);
         if (!response.ok) {
-          setMessages(
-            mockMessages.filter(
-              (m: Message) =>
-                String(m.conversation_id) ===
-                String(selectedChat.data.conversation_id)
-            )
-          );
+          console.log("Failed to load messages")
           return;
         }
         const data: Message[] = await response.json();
         setMessages(data);
+        console.log("messages", data);
       } catch (err) {
         console.error('Failed to load messages for selected chat', err);
-        setMessages(
-          mockMessages.filter(
-            (m: Message) =>
-              String(m.conversation_id) ===
-              String(selectedChat.data.conversation_id)
-          )
-        );
       }
     };
 
     fetchMessages();
   }, [selectedChat]);
+
+  
 
    
 
@@ -86,14 +77,16 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
+        {messages?.length === 0 ? (
           <div className="text-gray-500">No messages yet.</div>
         ) : (
-          messages.map((m) => (
+          messages?.map((m) => (
             <ConversationMessage
-              key={m.message_id}
-              textmessage={m}
-              isCurrentUser={m.sender_id === 1}
+              key={String(m.created_at)}
+              textmessage={m.content}
+              isCurrentUser={m.sender_id === user?.id}
+              created_at={m.created_at}
+              recipient_username={m.username}
             />
           ))
         )}
@@ -101,7 +94,7 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
       </div>
 
       <div className="border-t p-4 bg-white">
-        <MessageInput />
+        <MessageInput selectedChat={selectedChat}/>
       </div>
     </div>
   );
