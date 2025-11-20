@@ -7,12 +7,12 @@ const MessageInput = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (text.trim()) {
-            // send the message
+            //todo: send the message
         }
     };
 
 return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', padding: '10px', borderTop: '1px solid #ccc' }}>
+    <form onSubmit={handleSubmit} className="flex p-5">
       <input
         type="text"
         value={text}
@@ -20,7 +20,7 @@ return (
         placeholder="Type a message..."
         className="shadow appearance-none border rounded flex-1 p-2.5 mr-2.5 focus:outline"
       />
-      <button type="submit"className="py-2.5 px-3 cursor-pointer">Send</button>
+      <button type="submit"className="py-2.5 px-3 cursor-pointer border border-black rounded">Send</button>
     </form>
   );
 }

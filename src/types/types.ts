@@ -8,6 +8,7 @@ export interface Message {
     message_id: number;
     conversation_id: number;
     sender_id: number;
+    other_username?: string;
     textmessage: string;
     created_at: Date;
 }

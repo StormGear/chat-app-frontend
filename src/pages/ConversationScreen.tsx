@@ -2,51 +2,108 @@ import React, { useRef, useEffect, useState } from 'react';
 import type { Message } from '../types/types';
 import { ConversationMessage } from '../components/ConversationMessage';
 import { mockMessages } from '../mockData';
-import { useLocation, useParams } from 'react-router-dom';
-import NavBar from '../components/Navbar';
 import MessageInput from '../components/MessageInput';
+import type { ChatData } from './Home';
 
 
 
 
-const ConversationScreen: React.FC = () => {
+const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selectedChat}) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { conversationId } = useParams();
-  console.log(useLocation().state.mockUser);
-  const currentUserId: number = 1;
+
 
   const [messages, setMessages] = useState<Message[]>(mockMessages);
 
-  const handleSend = () => {
 
-  }
-
+   useEffect(() => {
+     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, [messages]);
+  
+  
   useEffect(() => {
+    if (!selectedChat) {
+      setMessages([]); 
+      return;
+    }
+
     const fetchMessages = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/chat/`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const url =
+          selectedChat.type === 'dm'
+            ? `http://localhost:8080/chat/dm/${selectedChat.data.conversation_id}`
+            : `http://localhost:8080/chat/group/${
+                selectedChat.data.conversation_id ?? selectedChat.data.conversation_id
+              }`;
+
+        const res = await fetch(url);
+        if (!res.ok) {
+          // fallback to mock messages on failure
+          setMessages(
+            mockMessages.filter(
+              (m: Message) =>
+                String(m.conversation_id) ===
+                String(selectedChat.data.conversation_id)
+            )
+          );
+          return;
         }
-        const data: Message[] = await response.json();
+        const data: Message[] = await res.json();
         setMessages(data);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load messages for selected chat', err);
+        setMessages(
+          mockMessages.filter(
+            (m: Message) =>
+              String(m.conversation_id) ===
+              String(selectedChat.data.conversation_id)
+          )
+        );
       }
     };
 
     fetchMessages();
-  }, [conversationId]);
+  }, [selectedChat]);
 
+   
+
+  if (!selectedChat) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Select a user or group to start chatting
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <NavBar title={useLocation().state.mockUser.username.toString()} />
-      {messages.map((message) => (
-        <ConversationMessage key={message.message_id} textmessage={message} isCurrentUser={message.sender_id === currentUserId} />
-      ))}
-      <div ref={messagesEndRef} />
-      <MessageInput />
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b shadow bg-white">
+        <h2 className="text-2xl font-bold">
+          {selectedChat.type === 'dm'
+            ? selectedChat.data.username
+            : selectedChat.data.group_name}
+        </h2>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.length === 0 ? (
+          <div className="text-gray-500">No messages yet.</div>
+        ) : (
+          messages.map((m) => (
+            <ConversationMessage
+              key={m.message_id}
+              textmessage={m}
+              isCurrentUser={m.sender_id === 1}
+            />
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="border-t p-4 bg-white">
+        <MessageInput />
+      </div>
     </div>
   );
 };
