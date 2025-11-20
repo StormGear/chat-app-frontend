@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = (id: number, username: string) => {
+  const login = (id: string, username: string) => {
     const newUser = { id, username };
     setUser(newUser);
     localStorage.setItem('authUser', JSON.stringify(newUser));

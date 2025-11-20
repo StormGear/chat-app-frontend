@@ -18,7 +18,7 @@ const Login = () => {
       e.preventDefault();
 
      try {
-       const response = await fetch(`http://localhost:8080/user/login`, {
+       const response = await fetch(`https://3gltf84h-8088.use.devtunnels.ms/users/login`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -31,8 +31,8 @@ const Login = () => {
        }
        const data = await response.json();
        console.log('Login successful: ', data);
-        if (data.success) {
-           login(data.id, data.username);
+        if (data.loginSuccessful) {
+           login(data.userId, data.username);
            navigate("/home");
            alert("Login successful, welcome back");
         } else {

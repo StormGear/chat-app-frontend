@@ -1,6 +1,6 @@
 
 export type User = {
-    id: number;
+    id: string;
     username: string;
 } | null;
 
@@ -30,6 +30,6 @@ export interface Conversation {
 
 export type AuthContextType = {
   user: User;
-  login: (id: number, username: string) => void;
+  login: (id: string, username: string) => void;
   logout: () => void;
 };
