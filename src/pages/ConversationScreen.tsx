@@ -30,14 +30,13 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
       try {
         const url =
           selectedChat.type === 'dm'
-            ? `http://localhost:8080/chat/dm/${selectedChat.data.conversation_id}`
+            ? `http://localhost:8080/chat/messages/${selectedChat.data.conversation_id}`
             : `http://localhost:8080/chat/group/${
                 selectedChat.data.conversation_id ?? selectedChat.data.conversation_id
               }`;
 
-        const res = await fetch(url);
-        if (!res.ok) {
-          // fallback to mock messages on failure
+        const response = await fetch(url);
+        if (!response.ok) {
           setMessages(
             mockMessages.filter(
               (m: Message) =>
@@ -47,7 +46,7 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
           );
           return;
         }
-        const data: Message[] = await res.json();
+        const data: Message[] = await response.json();
         setMessages(data);
       } catch (err) {
         console.error('Failed to load messages for selected chat', err);

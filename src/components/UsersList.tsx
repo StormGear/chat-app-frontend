@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { mockUsers } from "../mockData";
 import type { ChatData } from "../pages/Home";
-import type { User } from "../types/types";
+import type { Conversation, User } from "../types/types";
+import { useAuth } from "../contexts/AuthContext";
 
 interface UsersListProps {
   onSelect?: (chat: ChatData) => void;
@@ -14,14 +16,37 @@ const UsersList: React.FC<UsersListProps> = ({
   activeUserId = null,
 }) => {
   const users = mockUsers;
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  const handleSelect = (u: User) => {
+  useEffect(() => {
+    const fetchDirectMessages = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/chat/conversations/get-direct-messages?userId=${user?.id}`)
+
+        if (!(response.ok)) {
+            const errorInfo = await response.json();
+            throw new Error(errorInfo || "Failed to get direct messages");
+        }
+        const data = await response.json();
+        console.log('Retrieved dms ', data);
+        setConversations(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchDirectMessages();
+    return () => setConversations([]);
+  }, [user])
+
+  const handleSelect = (c: Conversation) => {
     const chat: ChatData = {
       type: 'dm',
       data: {
-        conversation_id: u?.id,
-        other_user_id: u?.id,
-        username: u?.username,
+        conversation_id: c?.conversation_id,
+        other_user_id: c?.recipient_user_id,
+        username: c?.recipient_username,
       },
     };
     onSelect?.(chat);
@@ -31,16 +56,16 @@ const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <>
-      {users.map((u: User) => {
+      {conversations.map((c: Conversation) => {
         const isActive =
-          activeUserId !== null && Number(activeUserId) === u?.id;
+          activeUserId !== null && Number(activeUserId) === c?.recipient_user_id;
 
         return (
           <div
-            key={u?.id}
+            key={c?.conversation_id}
             role="button"
             tabIndex={0}
-            onClick={() => handleSelect(u)}
+            onClick={() => handleSelect(c)}
             className={`p-4 cursor-pointer flex items-center border-b ${
               isActive ? 'bg-amber-200' : 'hover:bg-gray-100'
             }`}
@@ -50,11 +75,11 @@ const UsersList: React.FC<UsersListProps> = ({
                 isActive ? 'bg-amber-600 text-white' : 'bg-amber-500 text-black'
               }`}
             >
-              {u?.username?.charAt(0)?.toUpperCase() ?? '?'}
+              {c?.recipient_username?.charAt(0)?.toUpperCase() ?? '?'}
             </div>
 
             <div className="ml-3">
-              <p className="font-semibold">{u?.username ?? 'Unknown'}</p>
+              <p className="font-semibold">{c?.recipient_username ?? 'Unknown'}</p>
               <p className="text-xs text-gray-500">Tap to chat</p>
             </div>
           </div>
