@@ -3,7 +3,7 @@ import GroupListView from './GroupsList';
 import type { ChatData, TabProps } from '../pages/Home';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
-import type { User } from '../types/types';
+import type { Conversation, User } from '../types/types';
 
 interface SidebarProps {
   activeTab: TabProps['activeTab'];
@@ -37,7 +37,8 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
       ? selectedChat.data.conversation_id ?? null
       : null;
   
-  const openStartModal = () => {
+  const openStartModal = async () => {
+    await handleGetOtherUsers();
     setShowStartModal(true);
   }
   
@@ -45,10 +46,91 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
     setShowStartModal(false);
   }
 
-   const handleStartWithUser = (u: User) => {
+  const handleGetOtherUsers = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/user`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+         if (!response.ok) {
+           const errorInfo = await response.json();
+           throw new Error(errorInfo || 'Failed to fetch users');
+         }
+
+      // load users we're already chatting with to avoid duplicates
+
+      const existingConversations = await fetch(
+        `http://localhost:8080/chat/conversations/get-direct-messages?userId=${user?.id}`
+      );
+
+      if (!response.ok) {
+        const errorInfo = await response.json();
+        throw new Error(errorInfo || 'Failed to get direct messages');
+      }
+
+      const existingConversationsData = await existingConversations.json();
+      const existingUserIds = existingConversationsData.map((convo: Conversation) => convo.recipient_user_id);
+
+      // filter out users we're already chatting with
+      const allUsers: User[] = await response.json();
+      const filteredUsers = allUsers.filter((u: User) => u?.id !== user?.id && !existingUserIds.includes(u?.id));
+      setOtherUsers(filteredUsers);
+    } catch (error) {
+      console.error('Error fetching users', error);
+    }
+  };
+
+    const createNewConversation = async () => {
+        try {
+          const url = `http://localhost:8080/chat/conversations/direct`;
+  
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              user1: user?.id,
+              user2: selectedChat?.data.other_user_id
+            }),
+          });
+          if (!response.ok) {
+            console.log("Failed to load messages")
+            return;
+          }
+          const data = await response.json();
+          //           {
+          //   "conversationId": 7,
+          //   "success": true
+          // }
+          if (!data.success) {
+            console.log("Failed to create conversation")
+            return;
+          }
+          console.log("new conversation created", data);
+          return data;
+        } catch (err) {
+          console.error('Failed to load messages for selected chat', err);
+        }
+      };
+
+  const handleStartWithUser = async (u: User) => {
+    // Create a new conversation for the selected user
+    let newConversationId;
+    try {
+        newConversationId = await createNewConversation();
+     } catch (error) {
+       console.error('Error creating new conversation', error);
+     }
+
+    
      const chat: ChatData = {
        type: 'dm',
        data: {
+         conversation_id: newConversationId?.conversationId,
          other_user_id: u?.id,
          username: u?.username,
        },

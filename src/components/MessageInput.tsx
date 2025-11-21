@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { ChatData } from "../pages/Home";
 import { useAuth } from "../contexts/AuthContext";
+import type { Message } from "../types/types";
 
 
-const MessageInput: React.FC<{selectedChat: ChatData | null}> = ({selectedChat})=> {
+const MessageInput: React.FC<{ selectedChat: ChatData | null;  onNewMessage: (message: Message) => void }> = ({selectedChat, onNewMessage})=> {
     const [text, setText] = useState('');
     const { user } = useAuth();
 
@@ -36,7 +37,12 @@ const MessageInput: React.FC<{selectedChat: ChatData | null}> = ({selectedChat})
                 if (data.success) {
                   console.log("Messages sent successfully!");
                   setText("");
-                  // load the messages
+                  onNewMessage({
+                    sender_id: user!.id!,
+                    content: text,
+                    created_at: new Date(),
+                    username: user!.username!
+                  });
                 } else {
                     alert("Message sending failed, please try again");
                 }

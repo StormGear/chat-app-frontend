@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { mockUsers } from "../mockData";
-import type { ChatData } from "../pages/Home";
-import type { Conversation, User } from "../types/types";
-import { useAuth } from "../contexts/AuthContext";
+import { useEffect, useState } from 'react';
+import { mockUsers } from '../mockData';
+import type { ChatData } from '../pages/Home';
+import type { Conversation, User } from '../types/types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UsersListProps {
   onSelect?: (chat: ChatData) => void;
@@ -22,11 +22,13 @@ const UsersList: React.FC<UsersListProps> = ({
   useEffect(() => {
     const fetchDirectMessages = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/chat/conversations/get-direct-messages?userId=${user?.id}`)
+        const response = await fetch(
+          `http://localhost:8080/chat/conversations/get-direct-messages?userId=${user?.id}`
+        );
 
-        if (!(response.ok)) {
-            const errorInfo = await response.json();
-            throw new Error(errorInfo || "Failed to get direct messages");
+        if (!response.ok) {
+          const errorInfo = await response.json();
+          throw new Error(errorInfo || 'Failed to get direct messages');
         }
         const data = await response.json();
         console.log('Retrieved dms ', data);
@@ -38,7 +40,7 @@ const UsersList: React.FC<UsersListProps> = ({
 
     fetchDirectMessages();
     return () => setConversations([]);
-  }, [user])
+  }, [user]);
 
   const handleSelect = (c: Conversation) => {
     const chat: ChatData = {
@@ -53,12 +55,12 @@ const UsersList: React.FC<UsersListProps> = ({
     onChatSelect?.(chat);
   };
 
-
   return (
     <>
       {conversations.map((c: Conversation) => {
         const isActive =
-          activeUserId !== null && Number(activeUserId) === c?.recipient_user_id;
+          activeUserId !== null &&
+          Number(activeUserId) === c?.recipient_user_id;
 
         return (
           <div
@@ -79,7 +81,9 @@ const UsersList: React.FC<UsersListProps> = ({
             </div>
 
             <div className="ml-3">
-              <p className="font-semibold">{c?.recipient_username ?? 'Unknown'}</p>
+              <p className="font-semibold">
+                {c?.recipient_username ?? 'Unknown'}
+              </p>
               <p className="text-xs text-gray-500">Tap to chat</p>
             </div>
           </div>

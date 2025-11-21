@@ -15,6 +15,10 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
 
   const [messages, setMessages] = useState<Message[]>();
 
+  const handleNewMessage = (message: Message) => {
+    setMessages((prev: Message[] | undefined) => [...(prev ?? []), message]);
+  };
+
 
    useEffect(() => {
      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -22,18 +26,23 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
   
   
   useEffect(() => {
-    if (!selectedChat) {
-      setMessages([]); 
-      return;
-    }
+   
+
+    const resetMessages = () => {
+       if (!selectedChat?.data.conversation_id) {
+         setMessages([]);
+       }
+    };
+
+    resetMessages();
 
     const fetchMessages = async () => {
       try {
         const url =
-          selectedChat.type === 'dm'
-            ? `http://localhost:8080/chat/messages/${selectedChat.data.conversation_id}`
+          selectedChat?.type === 'dm'
+            ? `http://localhost:8080/chat/messages/${selectedChat?.data.conversation_id}`
             : `http://localhost:8080/chat/group/${
-                selectedChat.data.conversation_id ?? selectedChat.data.conversation_id
+                selectedChat?.data.conversation_id
               }`;
 
         const response = await fetch(url);
@@ -43,7 +52,7 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
         }
         const data: Message[] = await response.json();
         setMessages(data);
-        console.log("messages", data);
+        console.log("messages loaded", data);
       } catch (err) {
         console.error('Failed to load messages for selected chat', err);
       }
@@ -94,7 +103,7 @@ const ConversationScreen: React.FC<{selectedChat: ChatData | null}> = ({selected
       </div>
 
       <div className="border-t p-4 bg-white">
-        <MessageInput selectedChat={selectedChat}/>
+        <MessageInput selectedChat={selectedChat} onNewMessage={handleNewMessage}/>
       </div>
     </div>
   );
