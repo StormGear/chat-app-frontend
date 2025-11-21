@@ -14,6 +14,7 @@ interface SidebarProps {
 
 const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
   const [showStartModal, setShowStartModal] = useState(false);
+  const [newSelectedUser, setNewSelectedUser] = useState<User | null>(null); 
   const [otherUsers, setOtherUsers] = useState<User[] | null>([
     {
       id: 2,
@@ -45,6 +46,7 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
   const closeStartModal = () => {
     setShowStartModal(false);
   }
+n
 
   const handleGetOtherUsers = async () => {
     try {
@@ -93,8 +95,8 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              user1: user?.id,
-              user2: selectedChat?.data.other_user_id
+              "user1": user?.id,
+              "user2": newSelectedUser?.id,
             }),
           });
           if (!response.ok) {
@@ -102,7 +104,7 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
             return;
           }
           const data = await response.json();
-          //           {
+          //  data model: {
           //   "conversationId": 7,
           //   "success": true
           // }
@@ -111,32 +113,35 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
             return;
           }
           console.log("new conversation created", data);
-          return data;
+          return data.conversationId;
         } catch (err) {
           console.error('Failed to load messages for selected chat', err);
         }
       };
 
-  const handleStartWithUser = async (u: User) => {
+  const handleStartWithUser = async (newUser: User) => {
+    setNewSelectedUser(newUser);
     // Create a new conversation for the selected user
-    let newConversationId;
+    let newConversationId: number | undefined;
     try {
-        newConversationId = await createNewConversation();
+      newConversationId = await createNewConversation();
+      
+      const chat: ChatData = {
+        type: 'dm',
+        data: {
+          conversation_id: newConversationId,
+          other_user_id: newUser?.id,
+          username: newUser?.username,
+        },
+      };
+      onSelectChat(chat);
+      closeStartModal();
+
+      // add new conversation to the user list
+     
      } catch (error) {
        console.error('Error creating new conversation', error);
-     }
-
-    
-     const chat: ChatData = {
-       type: 'dm',
-       data: {
-         conversation_id: newConversationId?.conversationId,
-         other_user_id: u?.id,
-         username: u?.username,
-       },
-     };
-     onSelectChat(chat);
-     closeStartModal();
+     } 
    };
 
   

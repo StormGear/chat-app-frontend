@@ -15,7 +15,8 @@ const MessageInput: React.FC<{ selectedChat: ChatData | null;  onNewMessage: (me
         }
     };
 
-    const handleSendMessage = async (selectedChat : ChatData | null) => {
+  const handleSendMessage = async (selectedChat: ChatData | null) => {
+            console.log("selected Chat", selectedChat);
             try {
               const response = await fetch(`http://localhost:8080/chat/messages/send`, {
                 method: 'POST',
