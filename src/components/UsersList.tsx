@@ -3,6 +3,7 @@ import { mockUsers } from '../mockData';
 import type { ChatData } from '../pages/Home';
 import type { Conversation, User } from '../types/types';
 import { useAuth } from '../contexts/AuthContext';
+import { useMessaging } from '../contexts/MessagingContext';
 
 interface UsersListProps {
   onSelect?: (chat: ChatData) => void;
@@ -17,7 +18,7 @@ const UsersList: React.FC<UsersListProps> = ({
 }) => {
   const users = mockUsers;
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const { conversations, setConversations} = useMessaging();
 
   useEffect(() => {
     const fetchDirectMessages = async () => {

@@ -31,3 +31,8 @@ export type AuthContextType = {
   login: (id: number, username: string) => void;
   logout: () => void;
 };
+
+export type MessagingContextType = {
+    conversations: Conversation[];
+    setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
+}

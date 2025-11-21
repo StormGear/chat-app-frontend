@@ -2,8 +2,9 @@ import UserListView from './UsersList';
 import GroupListView from './GroupsList';
 import type { ChatData, TabProps } from '../pages/Home';
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useState, type SetStateAction } from 'react';
 import type { Conversation, User } from '../types/types';
+import { useMessaging } from '../contexts/MessagingContext';
 
 interface SidebarProps {
   activeTab: TabProps['activeTab'];
@@ -14,7 +15,10 @@ interface SidebarProps {
 
 const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
   const [showStartModal, setShowStartModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [newSelectedUser, setNewSelectedUser] = useState<User | null>(null); 
+  const [groupName, setGroupName] = useState("");
+  const [isGroupOpen, setGroupOpen] = useState(false);
   const [otherUsers, setOtherUsers] = useState<User[] | null>([
     {
       id: 2,
@@ -26,6 +30,7 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
     },
   ]);
   const { user } = useAuth();
+  const { setConversations } = useMessaging();
   const activeUserId =
     selectedChat && selectedChat.type === 'dm'
       ? selectedChat.data.other_user_id ??
@@ -37,6 +42,46 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
     selectedChat && selectedChat.type === 'group'
       ? selectedChat.data.conversation_id ?? null
       : null;
+
+  const handleInputChange = (e: { target: { value: SetStateAction<string>; }; }) => {
+       setGroupName(e.target.value);
+   }
+
+  const handleCreateNewGroup = async () => {
+          //     {
+          //   "name": "string",
+          //   "isOpen": true,
+          //   "managerId": 0
+          // }
+            try {
+              const response = await fetch(`http://localhost:8080/chat/groups/create-group`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "name": groupName,
+                    "isOpen": isGroupOpen,
+                    "managerId": user?.id
+               }),
+              });
+              if (!response.ok) {
+                const errorInfo = await response.json();
+                throw new Error(errorInfo || 'Login failed');
+              }
+              const data = await response.json();
+              console.log('Group creation successful: ', data);
+                if (data.success) {
+                  
+                } else {
+                    alert("Group creation failed, please try again");
+                }
+            } catch (error) {
+              console.error('Group creation failed', error);
+            }
+    
+  }
+   
   
   const openStartModal = async () => {
     await handleGetOtherUsers();
@@ -46,7 +91,15 @@ const Sidebar = ({ activeTab, onSelectChat, selectedChat }: SidebarProps) => {
   const closeStartModal = () => {
     setShowStartModal(false);
   }
-n
+
+  const openCreateModal = () => {
+      setShowCreateModal(true);
+  }
+
+  const closeCreateModal = () => {
+      setShowCreateModal(false);
+  }
+
 
   const handleGetOtherUsers = async () => {
     try {
@@ -121,6 +174,7 @@ n
 
   const handleStartWithUser = async (newUser: User) => {
     setNewSelectedUser(newUser);
+    console.log("Here is the new user", newUser);
     // Create a new conversation for the selected user
     let newConversationId: number | undefined;
     try {
@@ -137,7 +191,23 @@ n
       onSelectChat(chat);
       closeStartModal();
 
+      const newConversation: Conversation = {
+        conversation_id: newConversationId as number,
+          recipient_user_id: newUser?.id as number,
+          recipient_username: newUser?.username as string,
+      }
+
       // add new conversation to the user list
+      setConversations(
+        (prev) => {
+          return [
+            ...prev,
+            newConversation
+          ]
+        }
+      );
+
+
      
      } catch (error) {
        console.error('Error creating new conversation', error);
@@ -160,7 +230,7 @@ n
         ) : (
           <button
             className="w-full bg-amber-500 text-black font-semibold py-2 rounded"
-            onClick={() => onSelectChat(null)}
+            onClick={openCreateModal}
             title="Create a new group"
           >
             Create Group
@@ -240,6 +310,55 @@ n
                 className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+       {/* Create new Group Modal */}
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-black opacity-40"
+            onClick={closeCreateModal}
+          />
+          <div className="relative w-[92%] max-w-lg bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Create new group</h3>
+              <button
+                onClick={closeCreateModal}
+                aria-label="Close"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 max-h-80 overflow-y-auto">
+             <label htmlFor="username"  className="block text-gray-700 text-sm font-bold mb-2 my-10">
+                Enter a group name
+               </label>
+                <input 
+                type="text" 
+                id="groupname"
+                value={groupName}
+                className="shadow appearance-none border rounded w-1/2 py-2 px-3 text-gray-700"
+                onChange={handleInputChange}
+                placeholder="Enter group name"
+                />
+            </div>
+
+            <div className="p-3 border-t flex justify-end">
+              <button
+                onClick={handleCreateNewGroup}
+                className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 cursor-pointer"
+              >
+                Create
               </button>
             </div>
           </div>
